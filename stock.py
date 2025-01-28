@@ -9,12 +9,16 @@ def get_stock_data(stock_symbol):
     market_cap_usd = stock_info.get('marketCap', 'N/A')
     return current_price, market_cap_usd
 
-# Function to convert USD to INR
-def usd_to_inr(usd_value):
+# Function to convert USD to INR and round to integer
+def usd_to_inr_crore(usd_value):
+    if usd_value == 'N/A':
+        return 'N/A'
     # Fetch current USD to INR exchange rate
     exchange_rate_data = yf.Ticker("USDINR=X")
     exchange_rate = exchange_rate_data.history(period="1d")['Close'].iloc[-1]
-    return usd_value * exchange_rate
+    # Convert market cap to crore INR and round to integer
+    market_cap_inr_crore = round((usd_value * exchange_rate) / 10000000)
+    return market_cap_inr_crore
 
 # Streamlit app
 st.title("Indian Stock Market Dashboard")
@@ -30,11 +34,11 @@ if st.button("Get Data"):
     for stock in stocks:
         current_price, market_cap_usd = get_stock_data(stock)
         if current_price != 'N/A' and market_cap_usd != 'N/A':
-            # Convert market cap from USD to crore INR
-            market_cap_inr = usd_to_inr(market_cap_usd) / 1e7  # Convert to crore INR
+            # Convert market cap to crore INR and round to integer
+            market_cap_inr_crore = usd_to_inr_crore(market_cap_usd)
             st.write(f"**Stock:** {stock}")
             st.write(f"**Current Price (INR):** ₹{current_price:.2f}")
-            st.write(f"**Market Cap (Crore INR):** ₹{market_cap_inr:,.2f} Cr")
+            st.write(f"**Market Cap (Crore INR):** ₹{market_cap_inr_crore:,} Cr")
             st.write("---")
         else:
             st.write(f"**Stock:** {stock} - Data not available.")
